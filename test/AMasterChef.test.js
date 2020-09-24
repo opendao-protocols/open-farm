@@ -1,6 +1,21 @@
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 const MasterChef = artifacts.require('MasterChef');
 const MockERC20 = artifacts.require('MockERC20');
+const Proxy = artifacts.require('Proxy');
+
+const newMasterChef = async (token, dev, sushiPerBlock, startBlock, bonusEndBlock, txParams) => {
+    // Deploy the MasterChef logic/library contract
+    let logic = await MasterChef.new(txParams);
+
+    // Get the init code for MasterChef
+    const masterChefConstructCode = logic.contract.methods.initialize(token, dev, sushiPerBlock, startBlock, bonusEndBlock)
+        .encodeABI();
+
+    // Deploy the Proxy, using the init code for MasterChef
+    const proxy = await Proxy.new(masterChefConstructCode, logic.address, txParams);
+
+    return await MasterChef.at(proxy.address);
+}
 
 contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
     beforeEach(async () => {
@@ -8,19 +23,19 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
         this.sushi = await MockERC20.new('OPEN GOV', 'OPEN', '10000000000000000', { from: adminOPEN });
     });
 
-    // it('should set correct state variables', async () => {
-    //     this.chef = await MasterChef.new(this.sushi.address, dev, '1000', '0', '1000', { from: alice });
-    //     await this.sushi.transferOwnership(this.chef.address, { from: alice });
-    //     const sushi = await this.chef.sushi();
-    //     const devaddr = await this.chef.devaddr();
-    //     const owner = await this.sushi.owner();
-    //     assert.equal(sushi.valueOf(), this.sushi.address);
-    //     assert.equal(devaddr.valueOf(), dev);
-    //     assert.equal(owner.valueOf(), this.chef.address);
-    // });
+    it('should set correct state variables', async () => {
+        this.chef = await newMasterChef(this.sushi.address, dev, '1000', '0', '1000', { from: alice });
+        // await this.sushi.transferOwnership(this.chef.address, { from: alice });
+        const sushi = await this.chef.sushi();
+        const devaddr = await this.chef.devaddr();
+        // const owner = await this.sushi.owner();
+        assert.equal(sushi.valueOf(), this.sushi.address);
+        assert.equal(devaddr.valueOf(), dev);
+        // assert.equal(owner.valueOf(), this.chef.address);
+    });
 
     it('should allow dev and only dev to update dev', async () => {
-        this.chef = await MasterChef.new(this.sushi.address, dev, '1000', '0', '1000', { from: alice });
+        this.chef = await newMasterChef(this.sushi.address, dev, '1000', '0', '1000', { from: alice });
         await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
         assert.equal((await this.chef.devaddr()).valueOf(), dev);
         await expectRevert(this.chef.dev(bob, { from: bob }), 'dev: wut?');
@@ -44,7 +59,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should allow emergency withdraw', async () => {
             // 100 per block farming rate starting at block 100 with bonus until block 1000
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '100', '1000', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '100', '1000', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             await this.chef.add('100', this.lp.address, true);
             await this.lp.approve(this.chef.address, '1000', { from: bob });
@@ -56,7 +71,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should give out SUSHIs only after farming time', async () => {
             // 100 per block farming rate starting at block 100 with bonus until block 1000
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '100', '1000', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '100', '1000', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             // await this.sushi.transferOwnership(this.chef.address, { from: alice });
             await this.chef.add('100', this.lp.address, true);
@@ -83,7 +98,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should not distribute SUSHIs if no one deposit', async () => {
             // 100 per block farming rate starting at block 200 with bonus until block 1000
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '200', '1000', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '200', '1000', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             // await this.sushi.transferOwnership(this.chef.address, { from: alice });
             await this.chef.add('100', this.lp.address, true);
@@ -108,7 +123,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should distribute SUSHIs properly for each staker', async () => {
             // 100 per block farming rate starting at block 300 with bonus until block 1000
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '300', '1000', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '300', '1000', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             // await this.sushi.transferOwnership(this.chef.address, { from: alice });
             await this.chef.add('100', this.lp.address, true);
@@ -170,7 +185,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should give proper SUSHIs allocation to each pool', async () => {
             // 100 per block farming rate starting at block 400 with bonus until block 1000
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '400', '1000', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '400', '1000', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             // await this.sushi.transferOwnership(this.chef.address, { from: alice });
             await this.lp.approve(this.chef.address, '1000', { from: alice });
@@ -198,7 +213,7 @@ contract('MasterChef', ([alice, bob, carol, dev, minter, adminOPEN]) => {
 
         it('should stop giving bonus SUSHIs after the bonus period ends', async () => {
             // 100 per block farming rate starting at block 500 with bonus until block 600
-            this.chef = await MasterChef.new(this.sushi.address, dev, '100', '500', '600', { from: alice });
+            this.chef = await newMasterChef(this.sushi.address, dev, '100', '500', '600', { from: alice });
             await this.sushi.transfer(this.chef.address, '1000000000', { from: adminOPEN });
             // await this.sushi.transferOwnership(this.chef.address, { from: alice });
             await this.lp.approve(this.chef.address, '1000', { from: alice });

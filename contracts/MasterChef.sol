@@ -9,24 +9,29 @@ import "./SafeERC20.sol";
 import "./SafeMath.sol";
 
 // Inheritance
+import { LibraryLock } from "./LibraryLock.sol";
+import { Proxiable } from "./Proxiable.sol";
+import { Ownable } from "./Ownable.sol";
 import { MasterChefStorage } from "./MasterChefStorage.sol";
-import "./Ownable.sol";
 
-contract MasterChef is MasterChefStorage, Ownable {
+contract MasterChef is MasterChefStorage, Ownable, Proxiable, LibraryLock {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    event CodeUpdated(address indexed newCode);
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 indexed pid, uint256 amount);
 
-    constructor(
+    function initialize(
         IERC20 _sushi,
         address _devaddr,
         uint256 _sushiPerBlock,
         uint256 _startBlock,
         uint256 _bonusEndBlock
     ) public {
+        require(!initialized, "The library has already been initialized.");
+        LibraryLock.initialize();
         setOwner(msg.sender);
         sushi = _sushi;
         devaddr = _devaddr;
@@ -62,6 +67,12 @@ contract MasterChef is MasterChefStorage, Ownable {
         }
         totalAllocPoint = totalAllocPoint.sub(poolInfo[_pid].allocPoint).add(_allocPoint);
         poolInfo[_pid].allocPoint = _allocPoint;
+    }
+
+    /// @dev Update the rToken logic contract code
+    function updateCode(address newCode) external onlyOwner delegatedOnly {
+        updateCodeAddress(newCode);
+        emit CodeUpdated(newCode);
     }
 
     // Set the migrator contract. Can only be called by the owner.
