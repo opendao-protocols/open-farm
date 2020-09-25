@@ -6,19 +6,19 @@ require("dotenv").config({
 
 module.exports = {
   networks: {
-    development: {
-     host: "127.0.0.1",
-     port: 8545,
-     network_id: "*",
-    },
+    // development: {
+    //  host: "127.0.0.1",
+    //  port: 8545,
+    //  network_id: "*",
+    // },
 
     kovan: {
       provider: () => new HDWalletProvider(
-          process.env.PRIVATEKEY,
-          `https://kovan.infura.io/v3/${process.env.INFURA_ID}`,
-          0, //address_index
-          10, // num_addresses
-          true // shareNonce
+        process.env.PRIVATEKEY,
+        `https://kovan.infura.io/v3/${process.env.INFURA_ID}`,
+        0, //address_index
+        10, // num_addresses
+        true // shareNonce
       ),
       network_id: 42, // Kovan's id
       gas: 3000000,
@@ -29,11 +29,11 @@ module.exports = {
 
     ropsten: {
       provider: () => new HDWalletProvider(
-          process.env.PRIVATEKEY,
-          `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
-          0,
-          10,
-          true
+        process.env.PRIVATEKEY,
+        `https://ropsten.infura.io/v3/${process.env.INFURA_ID}`,
+        0,
+        10,
+        true
       ),
       network_id: 3,
       gas: 3000000,
@@ -42,11 +42,11 @@ module.exports = {
 
     mainnet: {
       provider: () => new HDWalletProvider(
-          process.env.PRIVATEKEY,
-          `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`,
-          0, //address_index
-          10, // num_addresses
-          true // shareNonce
+        process.env.PRIVATEKEY,
+        `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`,
+        0, //address_index
+        10, // num_addresses
+        true // shareNonce
       ),
       network_id: 1, // mainnet's id
       gas: 3000000, // max gaslimit
@@ -66,11 +66,11 @@ module.exports = {
       version: "0.5.16",
       // docker: true,
       settings: {
-       optimizer: {
-         enabled: true,
-         runs: 200
-       },
-      //  evmVersion: "byzantium"
+        optimizer: {
+          enabled: true,
+          runs: 200
+        },
+        //  evmVersion: "byzantium"
       }
     }
   },
