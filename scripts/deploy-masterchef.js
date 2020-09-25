@@ -7,7 +7,6 @@ const { promisify } = require("util");
 const addresses = require('./common/addresses');
 const { getGasPrice } = require('./common/eth-gas');
 const rl = require("./common/rl");
-const defaults = require("./common/defaults");
 
 const MasterChef = artifacts.require("MasterChef");
 const Proxy = artifacts.require("Proxy");
