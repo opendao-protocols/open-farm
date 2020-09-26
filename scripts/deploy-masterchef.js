@@ -10,6 +10,7 @@ const rl = require("./common/rl");
 
 const MasterChef = artifacts.require("MasterChef");
 const Proxy = artifacts.require("Proxy");
+const IERC20 = artifacts.require("IERC20");
 
 module.exports = async (callback) => {
   try {
@@ -24,13 +25,15 @@ module.exports = async (callback) => {
     let accounts = await web3.eth.getAccounts();
     console.log(`\nUsing account: ${accounts[0]}\n`);
 
+    let latestBlock = await web3.eth.getBlock('latest');
+    console.log(`\nLatest Block: ${latestBlock.number}\n`);
+
     let openToken = await promisify(rl.question)("Provide OPEN Token address: ") || contractAddresses.OPEN;
     let devAddress = await promisify(rl.question)("Provide Dev Address: ") || accounts[0];
     let perBlockReward = await promisify(rl.question)("Provide per block reward amount(not in Wei): ") || '100';
     
     let startBlock = await promisify(rl.question)("Provide reward distribution start block: ");
     if (!startBlock) {
-      let latestBlock = await web3.eth.getBlock('latest');
       startBlock = latestBlock.number;
     }
     
@@ -68,6 +71,19 @@ module.exports = async (callback) => {
     // Deploy the Proxy, using the init code for MasterChef
     const proxy = await Proxy.new(masterChefConstructCode, logic.address, txParams);
     console.log(`\nMasterChef proxy deployed at: ${proxy.address}`);
+
+    const OpenToken = await IERC20.at(contractAddresses.OPEN);
+    const openBalance = await OpenToken.balanceOf(accounts[0]);
+    console.log(`\nAccount's OPEN balance: ${web3.utils.fromWei(openBalance, 'ether')}`);
+
+    let amount = await promisify(rl.question)("Provide amount of OPEN to transfer to MasterChef: ");
+    if (!(parseFloat(amount) > 0)) {
+      console.log('\nTranfer Aborted');
+      callback();
+    }
+
+    await OpenToken.transfer(proxy.address, web3.utils.toWei(amount));
+    console.log(`\nTransferred ${amount} OPEN to Proxy at ${proxy.address}`);
 
     callback();
   } catch (err) {
