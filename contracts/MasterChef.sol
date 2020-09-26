@@ -154,12 +154,12 @@ contract MasterChef is MasterChefStorage, Ownable, Proxiable, LibraryLock {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
-        if (user.amount > 0) {
-            uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
-            if(pending > 0) {
-                safeSushiTransfer(msg.sender, pending);
-            }
-        }
+        // if (user.amount > 0) {
+        //     uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
+        //     if(pending > 0) {
+        //         safeSushiTransfer(msg.sender, pending);
+        //     }
+        // }
         if(_amount > 0) {
             pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
@@ -170,20 +170,20 @@ contract MasterChef is MasterChefStorage, Ownable, Proxiable, LibraryLock {
 
     // Withdraw LP tokens from MasterChef.
     function withdraw(uint256 _pid, uint256 _amount) public {
-        PoolInfo storage pool = poolInfo[_pid];
-        UserInfo storage user = userInfo[_pid][msg.sender];
-        require(user.amount >= _amount, "withdraw: not good");
-        updatePool(_pid);
-        uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
-        if(pending > 0) {
-            safeSushiTransfer(msg.sender, pending);
-        }
-        if(_amount > 0) {
-            user.amount = user.amount.sub(_amount);
-            pool.lpToken.safeTransfer(address(msg.sender), _amount);
-        }
-        user.rewardDebt = user.amount.mul(pool.accSushiPerShare).div(1e12);
-        emit Withdraw(msg.sender, _pid, _amount);
+        // PoolInfo storage pool = poolInfo[_pid];
+        // UserInfo storage user = userInfo[_pid][msg.sender];
+        // require(user.amount >= _amount, "withdraw: not good");
+        // updatePool(_pid);
+        // uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
+        // if(pending > 0) {
+        //     safeSushiTransfer(msg.sender, pending);
+        // }
+        // if(_amount > 0) {
+        //     user.amount = user.amount.sub(_amount);
+        //     pool.lpToken.safeTransfer(address(msg.sender), _amount);
+        // }
+        // user.rewardDebt = user.amount.mul(pool.accSushiPerShare).div(1e12);
+        // emit Withdraw(msg.sender, _pid, _amount);
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.

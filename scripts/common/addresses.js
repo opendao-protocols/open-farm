@@ -1,8 +1,8 @@
 
 module.exports = {
     kovan: {
-        MasterChefProxy: '0xFAE9040CDAE652e1412DB7ac744fEafF93Fe2c0a',
-        MasterChefImpl: '0x3d9103d70e1E307FE4244ECe48c458ba08Bf08E3',
+        MasterChefProxy: '0x8B2949bEEE12Dc5bF018519EDb9073F1E22fB798',
+        MasterChefImpl: '0x8B2949bEEE12Dc5bF018519EDb9073F1E22fB798',
         OPEN: '0x9DabC0CD23cfa506dB01c1AdF08EB25EbCdf81A9',
     },
     mainnet: {
