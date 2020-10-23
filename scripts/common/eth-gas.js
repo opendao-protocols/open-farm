@@ -13,7 +13,7 @@ const getGasPrice = async (world) => {
     proposedGP = proposedGP.toFixed();
     return world.web3.utils.toWei(proposedGP, 'gwei');
   } catch (error) {
-    throw(error);
+    throw (error);
   }
 }
 
