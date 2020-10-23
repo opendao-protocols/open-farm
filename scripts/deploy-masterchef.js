@@ -10,7 +10,7 @@ const rl = require("./common/rl");
 
 const MasterChef = artifacts.require("MasterChef");
 const Proxy = artifacts.require("Proxy");
-const IERC20 = artifacts.require("IERC20");
+const ERC20 = artifacts.require("ERC20");
 
 module.exports = async (callback) => {
   try {
@@ -28,7 +28,7 @@ module.exports = async (callback) => {
     let latestBlock = await web3.eth.getBlock('latest');
     console.log(`\nLatest Block: ${latestBlock.number}\n`);
 
-    let openToken = await promisify(rl.question)("Provide OPEN Token address: ") || contractAddresses.OPEN;
+    let rewardToken = await promisify(rl.question)("Provide Reward Token address: ") || contractAddresses.RewardToken;
     let devAddress = await promisify(rl.question)("Provide Dev Address: ") || accounts[0];
     let perBlockReward = await promisify(rl.question)("Provide per block reward amount(not in Wei): ") || '100';
 
@@ -37,13 +37,9 @@ module.exports = async (callback) => {
       startBlock = latestBlock.number;
     }
 
-    let bonusEndBlock = await promisify(rl.question)("Provide reward distribution bonus end block: ");
-    if (!bonusEndBlock) {
-      bonusEndBlock = parseFloat(startBlock) + 10000;
-      bonusEndBlock = bonusEndBlock.toString();
-    }
+    let bonusEndBlock = await promisify(rl.question)("Provide reward distribution bonus end block: ") || startBlock;
 
-    if (!openToken || !devAddress || !perBlockReward || !startBlock || !bonusEndBlock) {
+    if (!rewardToken || !devAddress || !perBlockReward || !startBlock || !bonusEndBlock) {
       console.log("Invalid Input!!! Returning");
       callback();
     }
@@ -62,7 +58,7 @@ module.exports = async (callback) => {
 
     // Deploy MasterChef itself as proxy
     // Get the init code for MasterChef
-    const masterChefConstructCode = logic.contract.methods.initialize(openToken, devAddress, perBlockReward, startBlock, bonusEndBlock)
+    const masterChefConstructCode = logic.contract.methods.initialize(rewardToken, devAddress, perBlockReward, startBlock, bonusEndBlock)
       .encodeABI();
 
     txParams = {
@@ -72,18 +68,25 @@ module.exports = async (callback) => {
     const proxy = await Proxy.new(masterChefConstructCode, logic.address, txParams);
     console.log(`\nMasterChef proxy deployed at: ${proxy.address}`);
 
-    const OpenToken = await IERC20.at(contractAddresses.OPEN);
-    const openBalance = await OpenToken.balanceOf(accounts[0]);
-    console.log(`\nAccount's OPEN balance: ${web3.utils.fromWei(openBalance, 'ether')}`);
+    const RewardToken = await ERC20.at(rewardToken);
+    let rewardTokenBalance = await RewardToken.balanceOf(accounts[0]);
+    const decimals = await RewardToken.decimals();
+    rewardTokenBalance = parseFloat(rewardTokenBalance) / (10 ** parseFloat(decimals));
 
-    let amount = await promisify(rl.question)("Provide amount of OPEN to transfer to MasterChef: ");
+    const symbol = await RewardToken.symbol();
+
+    console.log(`\nAccount's Reward Token (${symbol}) balance: ${rewardTokenBalance}`);
+
+    const amount = await promisify(rl.question)(`Provide amount of ${symbol} to transfer to MasterChef: `);
     if (!(parseFloat(amount) > 0)) {
       console.log('\nTranfer Aborted');
       callback();
     }
 
-    await OpenToken.transfer(proxy.address, web3.utils.toWei(amount));
-    console.log(`\nTransferred ${amount} OPEN to Proxy at ${proxy.address}`);
+    let amountInDec = parseFloat(amount) * (10 ** parseFloat(decimals));
+    amountInDec = amountInDec.toLocaleString('fullwide', { useGrouping: false });
+    await RewardToken.transfer(proxy.address, amountInDec);
+    console.log(`\nTransferred ${amount} ${symbol} to Proxy at ${proxy.address}`);
 
     callback();
   } catch (err) {

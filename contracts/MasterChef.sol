@@ -69,7 +69,7 @@ contract MasterChef is MasterChefStorage, Ownable, Proxiable, LibraryLock {
         poolInfo[_pid].allocPoint = _allocPoint;
     }
 
-    /// @dev Update the rToken logic contract code
+    /// @dev Update the masterchef logic contract code
     function updateCode(address newCode) external onlyOwner delegatedOnly {
         updateCodeAddress(newCode);
         emit CodeUpdated(newCode);
@@ -143,7 +143,7 @@ contract MasterChef is MasterChefStorage, Ownable, Proxiable, LibraryLock {
         // sushi.mint(devaddr, sushiReward.div(10));
         sushi.transfer(devaddr, sushiReward.div(10));
 
-        // sushi.mint(address(this), sushiReward);  // this contract already has OPEN tokens
+        // sushi.mint(address(this), sushiReward);  // this contract already has Reward(sushi) tokens
 
         pool.accSushiPerShare = pool.accSushiPerShare.add(sushiReward.mul(1e12).div(lpSupply));
         pool.lastRewardBlock = block.number;
