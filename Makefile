@@ -9,4 +9,7 @@ deploy-masterchef: build
 deploy-masterchef-impl: build
 	npx truffle exec --network $(network) scripts/deploy-masterchef-impl.js
 
-.PHONY: build deploy-masterchef deploy-masterchef-impl
+masterchef-details:
+	npx truffle exec --network $(network) scripts/master-chef-details.js
+
+.PHONY: build deploy-masterchef deploy-masterchef-impl masterchef-details
