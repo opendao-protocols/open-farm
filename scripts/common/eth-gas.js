@@ -17,6 +17,16 @@ const getGasPrice = async (world) => {
   }
 }
 
+// this overrides gasprice with process.env.MAINNET_GAS_PRICE
+const setGasPrice = async (world, network) => {
+  let gasPrice = await getGasPrice(world);
+  if (network === 'mainnet' && process.env.MAINNET_GAS_PRICE) {
+    gasPrice = process.env.MAINNET_GAS_PRICE;
+  }
+  return gasPrice;
+}
+
 module.exports = {
-  getGasPrice
+  getGasPrice,
+  setGasPrice
 }

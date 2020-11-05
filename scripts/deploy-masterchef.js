@@ -5,7 +5,7 @@
 const { promisify } = require("util");
 
 const addresses = require('./common/addresses');
-const { getGasPrice } = require('./common/eth-gas');
+const { setGasPrice } = require('./common/eth-gas');
 const rl = require("./common/rl");
 
 const MasterChef = artifacts.require("MasterChef");
@@ -93,12 +93,3 @@ module.exports = async (callback) => {
     callback(err);
   }
 };
-
-// TODO: should move it to 'utils'?
-const setGasPrice = async (world, network) => {
-  let gasPrice = await getGasPrice(world);
-  if (network === 'mainnet' && process.env.MAINNET_GAS_PRICE) {
-    gasPrice = process.env.MAINNET_GAS_PRICE;
-  }
-  return gasPrice;
-}
