@@ -7,6 +7,8 @@ const ERC20 = artifacts.require("ERC20");
 
 module.exports = async (callback) => {
   try {
+    console.log('Getting MasterChef Data... \n\n');
+
     let world = {};
     world.web3 = web3;
 
@@ -16,6 +18,15 @@ module.exports = async (callback) => {
     const contractAddresses = addresses[network];
 
     let MasterChefC = await MasterChef.at(contractAddresses.MasterChefProxy);
+    const rewardToken = await MasterChefC.sushi();
+    const RewardTokenC = await ERC20.at(rewardToken);
+    const rewardTokenSym = await RewardTokenC.symbol();
+    const rewardTokenDecimals = await RewardTokenC.decimals();
+    let rewardPerBlock = await MasterChefC.sushiPerBlock();
+    rewardPerBlock = BigNumber(rewardPerBlock).div(BigNumber(10).pow(BigNumber(rewardTokenDecimals)));
+
+    console.log(`Reward per Block: ${rewardPerBlock.toFixed(4)} ${rewardTokenSym}\n`);
+
     const totalAllocPoint = BigNumber(await MasterChefC.totalAllocPoint());
     console.log(`Total Allocation Point: ${totalAllocPoint.toFixed()}\n`)
     const poolLength = await MasterChefC.poolLength();
