@@ -31,11 +31,13 @@ module.exports = async (callback) => {
     console.log(`Total Allocation Point: ${totalAllocPoint.toFixed()}\n`)
     const poolLength = await MasterChefC.poolLength();
 
+    console.log('\nIndex\t', 'Pool Id\t\t', 'LP Token Address\t\t', 'Token Name\t', 'Alloc %\t', 'Allocation Points\t')
     let poolData = [];
     let count = 0;
     for (let i = 0; i < poolLength; i++) {
       let pool = [];
       MasterChefC.poolInfo(i).then(async (poolInfo) => {
+        pool.push(i);
         pool.push(poolInfo.lpToken);
 
         const Erc20C = await ERC20.at(poolInfo.lpToken);
@@ -65,7 +67,7 @@ module.exports = async (callback) => {
 
 const printData = (poolData) => {
   let sortedArr = poolData.sort((a, b) => {
-    return b[2] - a[2]
+    return b[3] - a[3]
   });
   console.table(sortedArr);
 }
